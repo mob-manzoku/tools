@@ -1,0 +1,26 @@
+#!/bin/sh
+
+unset tmpfile
+trap "[[ $tmpfile ]] && rm -f $tmpfile" 1 2 3 15
+tmpfile=$(mktemp 2>/dev/null||mktemp -t tmp)
+
+date
+BUCKET='backet name'
+echo "Bucket $BUCKET"
+
+aws s3 ls s3://${BUCKET} > ${tmpfile}
+
+NUM=`cat ${tmpfile} | wc -l`
+echo "$NUM files"
+
+
+SIZE=`cat ${tmpfile} | awk '{SUM += $3}END{print SUM/1024/1024}'`
+echo "$SIZE MBytes"
+echo "-------------------"
+
+
+echo "The number of uploaded file for the last week"
+cat $tmpfile | sort | awk '{print $1}' | uniq -c | tail -n7 | awk '{print $2 "  " $1 " files" }'
+
+rm -f $tmpfile
+
